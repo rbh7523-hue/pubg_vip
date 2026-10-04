@@ -1,10 +1,95 @@
 {
-  "version": 1,
+  "version": 2,
   "updated": "2026-10-04",
   "sensitivity_codes": [],
   "redeem_codes": [],
-  "upcoming": [],
-  "leaks": [],
+  "upcoming": [
+    {
+      "title": "الإصدار الحالي 4.6: وضع Bloodline Awakening",
+      "details": "وضع مصاصي الدماء لفترة محدودة على نسخة معدّلة من خريطة Erangel. اللاعب الذي يُقصى يعود كمصاص دماء بقدرات خاصة: هجوم قريب، واستعادة صحة، وكشف الأعداء. أضاف الإصدار أعداء جدد (Nightbat وBloodwalker وBloodwalker النخبة وVampire Elder)، ومواقع بطابع مصاصي الدماء مثل Rozhok وMylta وQuarry وGatka، وعناصر مثل Twilight Bat Wings وBlood Pact وHunter Bandage وScarlet Tonic تمنح حركة جديدة. كما شمل تغييرات على الكلاسيك وMetro Royale وWorld of Wonder والأسلحة والأداء. التفاصيل مأخوذة من ملاحظات النسخة التجريبية وقد تختلف قليلاً عن النهائية.",
+      "source": "https://www.gearupbooster.com/blog/pubg-mobile-v46.html"
+    },
+    {
+      "title": "الإصدار القادم 4.7: الموعد والثيم",
+      "details": "يُتوقع وصوله في الأسبوع الثاني من نوفمبر 2026 (أو منتصفه) بحسب التسريبات، بثيم موسم الأعياد وعيد الميلاد ورأس السنة. لم تؤكد الشركة الموعد رسمياً بعد.",
+      "source": "https://gamingonphone.com/news/pubg-mobile-leaks-for-october-and-november-2026-all-you-need-to-know-events-cosmetics/"
+    },
+    {
+      "title": "4.7 (مسرّب): عودة وضع الزومبي ودورة الليل والنهار",
+      "details": "تسريبات المختبرين تتحدث عن عودة وضع الزومبي بموجات متواصلة مع وجود فرق أخرى، ونظام نهار وليل حيث تظهر أنواع من الزومبي ليلاً (صيادون وبصّاقون سامّون ومدرّعون وزعماء)، مع أسلحة وذخيرة خاصة. تحذير: كل هذه معلومات غير مؤكدة رسمياً.",
+      "source": "https://www.ldshop.gg/blog/pubg-mobile/4-7-version-update.html"
+    },
+    {
+      "title": "4.7 (مسرّب): جزيرة Dragon Lion City وباس الموسم",
+      "details": "منطقة جديدة تمزج العمارة التقليدية (معابد وأسواق) مع أجواء منتجع ساحلي حديث. ويُقال إن عناصر الرويال باس تجمع بين طابع الزومبي المظلم وألوان المدينة. غير مؤكد رسمياً.",
+      "source": "https://www.ldshop.gg/blog/pubg-mobile/4-7-version-update.html"
+    },
+    {
+      "title": "4.7 (مسرّب): الأسلحة وMetro Royale ومكافحة الغش",
+      "details": "تخفيف الارتداد لبعض البنادق الهجومية الضعيفة، وربما عنصر حاجز قابل للنشر، وتوسعة لوضع WOW بأصول زومبي، وتحديث Metro Royale بنظام ملاجئ تحت الأرض فيه أعداء نخبة وغنائم أعلى، وتحسين كشف التصويب غير الطبيعي والحركات المستحيلة، وميزات للكلان مثل شعارات وألقاب وإطارات ترصد إنجازات البقاء. غير مؤكد رسمياً.",
+      "source": "https://www.ldshop.gg/blog/pubg-mobile/4-7-version-update.html"
+    },
+    {
+      "title": "السيزون A21 (مسرّب)",
+      "details": "تشير التسريبات إلى بدء السيزون A21 مع الإصدار 4.6 (حوالي 12 سبتمبر 2026). الثيم الرئيسي لم يُسرَّب. سعر الباس المتوقع: Elite Pass بـ 360 UC أو Elite Pass Plus بـ 720 UC. المصادر تتفاوت في تاريخ نزول 4.6 بين 9 و17 سبتمبر، فاعتمد على إعلان اللعبة داخل التطبيق.",
+      "source": "https://www.sportsdunia.com/gaming/pubg-mobile-a21-royale-pass-leaks"
+    },
+    {
+      "title": "وضع Ocean Odyssey (موعده غير محدد)",
+      "details": "تذكر التسريبات عودة وضع كلاسيكي بثيم محيطي شعبي خلال أكتوبر، دون تاريخ دقيق.",
+      "source": "https://gamingonphone.com/news/pubg-mobile-leaks-for-october-and-november-2026-all-you-need-to-know-events-cosmetics/"
+    }
+  ],
+  "leaks": [
+    {
+      "title": "رويال باس A21: مكافآت مسرّبة",
+      "details": "المستوى 1: طقم Fearless Battle Striker. المستوى 50: سلاح Withering Honey Badger قابل للترقية. المستوى 90: سلاح ASM Abakan بتصميم Mercedes Industries. المستوى 100: طقم Exoframe Drifter. أسلحة أخرى مسرّبة: QBU وThompson بتصميم Mercedes Industries، وتصميم Operation Specter للطائرة. قد تختلف الأشكال عند الإصدار الرسمي.",
+      "confirmed": false,
+      "source": "https://www.sportsdunia.com/gaming/pubg-mobile-a21-royale-pass-leaks"
+    },
+    {
+      "title": "2 أكتوبر: تعاون B.Duck",
+      "details": "إكسسوارات وتصاميم أسلحة ومركبات وأطقم بثيم شخصية B.Duck من هونغ كونغ.",
+      "confirmed": false,
+      "source": "https://gamingonphone.com/news/pubg-mobile-leaks-for-october-and-november-2026-all-you-need-to-know-events-cosmetics/"
+    },
+    {
+      "title": "9 أكتوبر: عجلة الحظ Honor",
+      "details": "طقم Honor مع تصاميم أسلحة وأطقم وإكسسوارات.",
+      "confirmed": false,
+      "source": "https://gamingonphone.com/news/pubg-mobile-leaks-for-october-and-november-2026-all-you-need-to-know-events-cosmetics/"
+    },
+    {
+      "title": "12 أكتوبر: Shiba Explorer",
+      "details": "رفقاء (Buddies) بثيم الكلاب، ويُتوقع عودة تصاميم Shiba Inu السابقة.",
+      "confirmed": false,
+      "source": "https://gamingonphone.com/news/pubg-mobile-leaks-for-october-and-november-2026-all-you-need-to-know-events-cosmetics/"
+    },
+    {
+      "title": "19 أكتوبر: نهاية مسار الجوائز One Punch Man",
+      "details": "ينتهي المسار الوحيد للجوائز في هذا الموسم في هذا التاريخ، فاحرص على إكمال مهامه قبله.",
+      "confirmed": false,
+      "source": "https://www.memuplay.com/blog/pubg-mobile-october-november-2026-leaks.html"
+    },
+    {
+      "title": "25 أكتوبر: طقم GILT 2 (سلاح قابل للترقية)",
+      "details": "آخر طقم GILT يتضمن تصميم سلاح قابل للترقية وأطقماً أسطورية وإكسسوارات.",
+      "confirmed": false,
+      "source": "https://gamingonphone.com/news/pubg-mobile-leaks-for-october-and-november-2026-all-you-need-to-know-events-cosmetics/"
+    },
+    {
+      "title": "6 نوفمبر: آخر عجلة حظ في الإصدار 4.6",
+      "details": "لم تُكشف محتوياتها بعد.",
+      "confirmed": false,
+      "source": "https://gamingonphone.com/news/pubg-mobile-leaks-for-october-and-november-2026-all-you-need-to-know-events-cosmetics/"
+    },
+    {
+      "title": "9 نوفمبر: نهاية فعالية Lincoln Motor Cruise",
+      "details": "تنتهي الفعالية التي تضم تصاميم مركبات Lincoln الكلاسيكية.",
+      "confirmed": false,
+      "source": "https://www.memuplay.com/blog/pubg-mobile-october-november-2026-leaks.html"
+    }
+  ],
   "links": [],
   "_format_help": {
     "sensitivity_codes": "كل عنصر: {\"name\": \"اسم اللاعب أو الإعداد\", \"device\": \"نوع الجهاز\", \"code\": \"الكود الحقيقي\", \"source\": \"رابط أو اسم المصدر\", \"expires\": \"YYYY-MM-DD (اختياري)\"}",

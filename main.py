@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import base64
 import tempfile
@@ -21,6 +22,7 @@ from kivy.clock import Clock
 from kivy.core.clipboard import Clipboard
 from kivy.core.window import Window
 from kivy.metrics import dp, sp
+from kivy.uix.image import Image
 from kivy.uix.scrollview import ScrollView
 from kivy.utils import get_color_from_hex as hexc
 from kivy.utils import platform
@@ -31,6 +33,7 @@ from kivymd.uix.button import MDFlatButton, MDIconButton, MDRaisedButton
 from kivymd.uix.card import MDCard
 from kivymd.uix.gridlayout import MDGridLayout
 from kivymd.uix.label import MDIcon, MDLabel
+from kivymd.uix.navigationdrawer import MDNavigationDrawer, MDNavigationLayout
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.scrollview import MDScrollView
@@ -104,6 +107,27 @@ AR_FONT_B = first_font([
 ], AR_FONT)
 BRAND_FONT = first_font([FONT_BRAND, EMB_BOLD], AR_FONT_B)
 
+try:
+    import assets as _assets
+except Exception:
+    _assets = None
+
+
+def asset_path(name):
+    if _assets is None or name not in _assets.IMGS:
+        return None
+    for folder in (BASE_DIR, tempfile.gettempdir()):
+        try:
+            path = os.path.join(folder, "vip_" + name)
+            if not os.path.exists(path) or os.path.getsize(path) < 100:
+                with open(path, "wb") as fh:
+                    fh.write(base64.b64decode(_assets.IMGS[name]))
+            return path
+        except Exception:
+            continue
+    return None
+
+
 BG = hexc("#0A0C11")
 BAR = hexc("#10131B")
 CARD = hexc("#151A24")
@@ -115,7 +139,7 @@ MUTED = hexc("#8E97AB")
 GREEN = hexc("#3DDC84")
 RED = hexc("#FF5C5C")
 
-DEFAULT_DATA_URL = "https://raw.githubusercontent.com/YOUR-USERNAME/pubg-vip-data/main/data.json"
+DEFAULT_DATA_URL = "https://raw.githubusercontent.com/rbh7523-hue/pubg_vip/main/data.json"
 DEFAULT_DATA = {
     "version": 0,
     "updated": "",
@@ -147,8 +171,8 @@ def chars_per_line(size, pad=64):
     return max(14, int(usable / (sp(size) * 0.52)))
 
 
-def fmt(text, size=16, pad=64):
-    width = chars_per_line(size, pad)
+def fmt(text, size=16, pad=80, width=None):
+    width = width or chars_per_line(size, pad)
     out = []
     for para in str(text).split("\n"):
         if not para.strip():
@@ -168,7 +192,7 @@ def style_label(label, font, size):
     Clock.schedule_once(apply, 0)
 
 
-def lab(text, size=16, bold=False, color=TEXT, halign="right", font=None, raw=False, pad=64):
+def lab(text, size=16, bold=False, color=TEXT, halign="right", font=None, raw=False, pad=80):
     body = str(text) if raw else fmt(text, size, pad)
     use_font = font or (AR_FONT_B if bold else AR_FONT)
     label = MDLabel(
@@ -191,7 +215,7 @@ def para(text, size=15, color=TEXT):
     return lab(text, size=size, color=color)
 
 
-def card(children, color=CARD, pad=14, spacing=8):
+def card(children, color=CARD, pad=18, spacing=10, accent=GOLD):
     box = MDCard(
         orientation="vertical",
         padding=dp(pad),
@@ -199,12 +223,45 @@ def card(children, color=CARD, pad=14, spacing=8):
         adaptive_height=True,
         size_hint_y=None,
         md_bg_color=color,
-        radius=[dp(16)] * 4,
+        radius=[dp(24)] * 4,
         elevation=0,
     )
+    if accent is not None:
+        strip = MDBoxLayout(
+            size_hint=(None, None),
+            size=(dp(44), dp(5)),
+            md_bg_color=accent,
+            radius=[dp(3)] * 4,
+            pos_hint={"right": 1},
+        )
+        box.add_widget(strip)
     for child in children:
         box.add_widget(child)
     return box
+
+
+def img_card(name, caption=None, accent=GOLD):
+    path = asset_path(name)
+    if not path:
+        return None
+    try:
+        img = Image(source=path, size_hint_y=None, height=dp(200), fit_mode="contain")
+    except TypeError:
+        img = Image(source=path, size_hint_y=None, height=dp(200), allow_stretch=True, keep_ratio=True)
+    img.bind(width=lambda inst, w: setattr(inst, "height", w * 520.0 / 900.0))
+    parts = [img]
+    if caption:
+        parts.append(lab(caption, size=13, color=MUTED))
+    return card(parts, accent=accent)
+
+
+def tint(color, amount=0.22):
+    return (
+        CARD[0] * (1 - amount) + color[0] * amount,
+        CARD[1] * (1 - amount) + color[1] * amount,
+        CARD[2] * (1 - amount) + color[2] * amount,
+        1,
+    )
 
 
 def notify(message):
@@ -379,15 +436,76 @@ QUIZ = [
 ]
 
 LOCAL_KB = [
-    (["حساسية", "ثبات", "sensitivity", "اهتزاز"], "ابدأ بقيم متوسطة، وخفّض حساسية ADS كلما زاد تكبير المنظار، وغيّر قيمة واحدة فقط كل مرة وجرّبها في ساحة التدريب على هدف بعيد. راجع قسم الحساسية وثبات الإيم لخطوات التثبيت."),
-    (["جايرو", "gyro", "جيرو"], "الجايروسكوب يساعد في التحكم العمودي بالارتداد. ابدأ بقيم منخفضة للمناظير الكبيرة (4x و6x و8x) وارفعها تدريجياً مع التدريب."),
-    (["ارتداد", "recoil", "رشقة"], "اسحب للأسفل بنعومة، واستخدم رشقات قصيرة في المدى البعيد، وركّب ملحقات تقلل الارتداد مثل المقبض العمودي."),
-    (["قريب", "close", "جيجل", "jiggle"], "في المواجهات القريبة تحرك بشكل غير منتظم، استعمل SMG أو سلاحاً سريع الإطلاق، واظهر واختبئ من الزوايا بدل الوقوف المكشوف."),
-    (["بنج", "ping", "lag", "تقطيع", "لاق"], "استعمل واي فاي 5GHz أو بيانات مستقرة، واختر السيرفر الأقرب، وأغلق التطبيقات الخلفية. البنج تحت 50 ممتاز."),
-    (["كود", "redeem", "استرداد"], "أكواد الاسترداد تُستبدل من الصفحة الرسمية فقط عبر Character ID والكود، وهي محدودة بالوقت أو بالعدد. افتح قسم أكواد الاسترداد."),
-    (["سلاح", "weapon", "m416", "akm"], "M416 متوازن وسهل التحكم، وAKM أقوى ضرراً لكن ارتداده أعلى. استخدم قسم الأسلحة للمقارنة."),
-    (["خريطة", "map", "لوت", "loot"], "كل خريطة لها أماكن لوت قوية، راجع قسم الخرائط لقائمة المواقع والمركبات لكل خريطة."),
+    (["حساسيه", "حساسية", "ثبات", "اهتزاز", "sensitivity", "ثبت"], "ابدأ بقيم متوسطة، وخفّض حساسية ADS كلما زاد تكبير المنظار، وغيّر قيمة واحدة فقط كل مرة وجرّبها في ساحة التدريب على هدف بعيد. راجع قسم الحساسية وثبات الإيم لخطوات التثبيت والحاسبة."),
+    (["جايرو", "gyro", "جيرو", "جايروسكوب"], "الجايروسكوب يساعد في التحكم العمودي بالارتداد. ابدأ بقيم منخفضة للمناظير الكبيرة (4x و6x و8x) وارفعها تدريجياً مع التدريب، وجرّب تفعيله عند المناظير فقط أولاً."),
+    (["ارتداد", "recoil", "رشقه", "رشق", "سحب", "يطير"], "اسحب للأسفل بحركة ناعمة ثابتة بدل الضغط المتقطع، واستخدم رشقات قصيرة (3 إلى 5 طلقات) في المدى البعيد، وركّب ملحقات تقلل الارتداد مثل المقبض العمودي. الجلوس أو الانحناء يقلل الارتداد قليلاً."),
+    (["قريب", "close", "مواجهه", "مواجهات", "قرب"], "في المواجهات القريبة تحرك بشكل غير منتظم، استعمل رشاشاً (SMG) أو سلاحاً سريع الإطلاق، واظهر واختبئ من الزوايا بدل الوقوف المكشوف، وابدأ بقنبلة صاعقة أو دخان إن توفرت."),
+    (["جيجل", "jiggle", "تحرك", "حركه"], "الجيجل هو تحريك الشخصية جانبياً أو بالميل بشكل غير متوقع أثناء المواجهة لتصعّب على الخصم التصويب. بدّل الاتجاه بإيقاع غير ثابت ولا تبالغ حتى لا تفقد تصويبك أنت أيضاً."),
+    (["تصويب", "crosshair", "راس", "رأس", "مركز"], "أبقِ مركز الشاشة على مستوى الرأس دائماً وعلى الزاوية التي يُتوقع ظهور العدو منها، ولا تنظر للأرض أثناء الركض. صوّب مسبقاً قبل فتح باب أو تجاوز زاوية."),
+    (["بنج", "ping", "lag", "تقطيع", "لاق", "تهنيج", "هنج"], "استعمل واي فاي 5GHz قريباً من الراوتر أو بيانات مستقرة، واختر السيرفر الأقرب، وأغلق التطبيقات الخلفية. البنج تحت 50 ممتاز، ومن 50 إلى 100 جيد، وفوق 100 سيؤثر على المواجهات."),
+    (["كود حساسيه", "كود الحساسيه", "اكواد الحساسيه", "كود حساسية", "اكواد الحساسية", "شير كود"], "لا أولّد أكواد حساسية وهمية. أكواد الحساسية الحقيقية تُضاف إلى قسم أكواد الحساسية من ملف البيانات السحابي بعد التأكد منها، وتختفي تلقائياً عند انتهاء تاريخها."),
+    (["استرداد", "redeem", "كود", "اكواد", "شحن مجاني"], "أكواد الاسترداد تُستبدل من الصفحة الرسمية فقط (pubgmobile.com/redeem) بإدخال Character ID والكود ورمز التحقق، وتصل المكافأة إلى بريد اللعبة. بعض الأكواد محدودة بالوقت أو بالعدد أو بالمنطقة. افتح قسم أكواد الاسترداد."),
+    (["افضل سلاح", "اقوى سلاح", "سلاح"], "M416 متوازن وسهل التحكم لمعظم اللاعبين، وAKM أقوى ضرراً لكن ارتداده أعلى، وBeryl M762 سريع لكنه صعب الثبات، وVector وUZI للمواجهات القريبة جداً، وKar98k وAWM للمدى البعيد. استعمل قسم الأسلحة للمقارنة."),
+    (["درع", "armor", "خوذه", "خوذة", "helmet"], "الدرع والخوذة من المستوى 3 يقللان الضرر أكثر. أولوية اللوت: درع وخوذة أعلى مستوى متاح، ثم الإسعافات، ثم الملحقات. استخدم حاسبة الضرر في قسم الأسلحة لمعرفة عدد الطلقات التقريبي."),
+    (["مركبه", "مركبات", "سياره", "vehicle", "دراجه"], "المركبات تساعدك في الهروب من الدائرة السامة أو الانتقال بسرعة، لكنها تكشف موقعك بالصوت. اترك المركبة قبل الاشتباك واستعملها كغطاء إن لزم."),
+    (["دائره", "زون", "zone", "الدائره", "منطقه امنه"], "ادخل الدائرة مبكراً واختر موقعاً مرتفعاً أو خلف غطاء، ولا تتأخر خارجها حتى لا تتحرك تحت النار. راقب الدائرة التالية قبل أن تغلق الحالية."),
+    (["تسخين", "تمرين", "تدريب", "warm", "ساحه التدريب"], "سخّن 10 دقائق في ساحة التدريب قبل اللعب: ارمِ رشقات على هدف بعيد، ثم تدرّب على الجيجل أمام هدف متحرك، وبعدها ابدأ المباريات."),
+    (["اطارات", "fps", "رسومات", "جرافيك", "سخونه", "سخونة"], "اختر معدل إطارات ثابتاً يتحمله جهازك دون سخونة، فالإطارات المتذبذبة تفسد الثبات أكثر من الإطارات المنخفضة الثابتة. أغلق التطبيقات الخلفية وتجنب اللعب أثناء الشحن السريع."),
+    (["فريق", "سكواد", "squad", "تواصل", "ميكرفون"], "تواصل بجمل قصيرة (موقع العدو، المسافة، الاتجاه)، وتحركوا كمجموعة، وقسّموا الزوايا بين اللاعبين، وأنعشوا الزميل بعد تأمين الموقع وليس أثناء النار المفتوحة."),
+    (["علاج", "اسعافات", "heal", "صحه", "شفاء"], "عالج بعد أن تؤمّن غطاءً أو تقطع خط النظر باستخدام دخان، ولا تعالج وأنت مكشوف. اللاعب الذي يعالج في العراء هو هدف سهل."),
 ]
+
+
+def norm(text):
+    t = str(text).lower()
+    t = re.sub("[\u064B-\u0652\u0640]", "", t)
+    for a, b in (("أ", "ا"), ("إ", "ا"), ("آ", "ا"), ("ى", "ي"), ("ة", "ه"), ("ؤ", "و"), ("ئ", "ي")):
+        t = t.replace(a, b)
+    return t
+
+
+def smart_answer(text, data):
+    q = norm(text)
+
+    for name, w in WEAPONS.items():
+        if norm(name) in q:
+            return "%s (%s): ضرر أساسي تقريبي %d، سرعة الإطلاق %d/10، سهولة التحكم %d/10، المدى %d/10. الأرقام تقريبية وقد تتغير مع التحديثات. يمكنك المقارنة بين سلاحين في قسم الأسلحة." % (name, w["type"], w["dmg"], w["rate"], w["ctrl"], w["range"])
+
+    for name, info in MAPS:
+        if norm(name) in q:
+            return name + "\n" + info
+
+    m = re.search(r"(\d)\s*x", q)
+    scope = None
+    if m:
+        scope = m.group(1) + "x"
+    elif "ريد دوت" in q or "red dot" in q or "رد دوت" in q:
+        scope = "Red Dot"
+    if scope and any(k in q for k in ("حساسيه", "ثبات", "sens", "ads", "منظار")):
+        for name, mult in SensCalc.SCOPES:
+            if name.lower() == scope.lower():
+                return "لمنظار %s: نقطة بداية حساسية ADS تقارب %d%% من قيمة الريد دوت. جرّبها في ساحة التدريب وعدّلها 5 إلى 10 نقاط في كل مرة. استعمل حاسبة نقاط البداية في قسم الحساسية لأرقام جاهزة." % (name, int(mult * 100))
+
+    if any(k in q for k in ("تحديث", "قادم", "سيزون", "موسم", "نسخه", "تسريب", "بكج", "كريت", "عجله", "ترقيه", "رويال باس", "a21", "4.7", "4.6")):
+        items = []
+        for key in ("upcoming", "leaks"):
+            for it in data.get(key, []):
+                if isinstance(it, dict) and it.get("title") and not str(it.get("title")).startswith("_"):
+                    items.append(str(it["title"]))
+        if items:
+            return "أحدث ما في التطبيق (معظمه تسريبات غير مؤكدة رسمياً):\n- " + "\n- ".join(items[:7]) + "\nافتح قسم التحديث القادم أو البكجات والتسريبات للتفاصيل والمصدر."
+        return "لا توجد معلومات محفوظة حالياً. اضغط تحديث في قسم التحديث القادم ليجلب التطبيق آخر البيانات."
+
+    best, best_score = None, 0
+    for keys, answer in LOCAL_KB:
+        score = sum((3 if " " in k else 1) for k in keys if norm(k) in q)
+        if score > best_score:
+            best, best_score = answer, score
+    if best:
+        return best
+
+    return "لم أفهم سؤالك تماماً. جرّب أن تسأل مثلاً: كيف أثبت الحساسية؟ ما حساسية منظار 6x؟ كيف أقلل الارتداد؟ ما التحديث القادم؟ ما معلومات M416؟ أو راجع أقسام التطبيق من القائمة."
+
 
 SYSTEM_PROMPT = (
     "أنت مساعد متخصص في لعبة PUBG Mobile داخل تطبيق للاعبين. أجب بالعربية الواضحة وباختصار وبشكل عملي "
@@ -423,6 +541,7 @@ class Page(MDScreen):
             anchor_title="right",
             elevation=0,
             left_action_items=[["arrow-left", lambda *_: app.go("home")]],
+            right_action_items=[["menu", lambda *_: app.open_drawer()]],
         )
         Clock.schedule_once(self._style_bar, 0)
         root.add_widget(self.bar)
@@ -430,8 +549,8 @@ class Page(MDScreen):
         self.body = MDBoxLayout(
             orientation="vertical",
             adaptive_height=True,
-            padding=[dp(12), dp(12), dp(12), dp(24)],
-            spacing=dp(12),
+            padding=[dp(14), dp(14), dp(14), dp(28)],
+            spacing=dp(14),
         )
         self.scroll.add_widget(self.body)
         root.add_widget(self.scroll)
@@ -654,12 +773,15 @@ def update_status_card(app):
 
 
 def build_sens(app):
-    return [
+    widgets = [
         card([head("فهم الحساسية"), para(SENS_GUIDE)]),
+        img_card("g_sens_scale.png", "كلما زاد تكبير المنظار قلّت نسبة حساسية ADS المناسبة. هذه نسب تقريبية لنقطة البداية وليست أرقاماً رسمية."),
         card([head("خطوات تثبيت الحساسية"), para(SENS_STEPS)]),
         card([head("ثبات الإيم"), para(SENS_AIM)]),
+        img_card("g_recoil.png", "الرصاص يصعد للأعلى أثناء الرشق، فاسحب للأسفل بحركة ناعمة ثابتة لتعويضه.", accent=GREEN),
         card([head("حاسبة نقاط البداية"), para("اختر أسلوبك ليعطيك التطبيق نقاط بداية للمناظير بنسب مناسبة، ثم عدّلها بنفسك."), SensCalc()]),
     ]
+    return [w for w in widgets if w is not None]
 
 
 def build_scodes(app):
@@ -690,10 +812,18 @@ def build_scodes(app):
 
 
 def build_tactics(app):
+    extras = {
+        "حركة الجيجل (Jiggle)": ("g_jiggle.png", "الحركة المتعرجة غير المتوقعة تصعّب على الخصم تثبيت التصويب مقارنة بالحركة المستقيمة.", ORANGE),
+        "ضبط التصويب (Crosshair Placement)": ("g_crosshair.png", "أبقِ مركز الشاشة على مستوى الرأس قبل أن يظهر العدو، لا على الأرض.", GREEN),
+        "تقليل التقطيع (Lag / Ping)": ("g_ping.png", "البنج تحت 50 ممتاز، ومن 50 إلى 100 جيد، وفوق 100 سيؤثر على المواجهات.", GOLD),
+    }
     widgets = []
     for title, text in TACTICS:
         widgets.append(card([head(title), para(text)]))
-    return widgets
+        if title in extras:
+            name, caption, accent = extras[title]
+            widgets.append(img_card(name, caption, accent))
+    return [w for w in widgets if w is not None]
 
 
 def build_quiz(app):
@@ -824,7 +954,7 @@ def build_settings(app):
         ]),
         card([
             head("مفتاح المساعد الذكي"),
-            para("ضع مفتاح Anthropic API الخاص بك ليجيب المساعد بالذكاء الاصطناعي. بدون مفتاح يعمل المساعد بإجابات محلية محدودة. يُحفظ المفتاح على جهازك فقط."),
+            para("اختياري: المساعد يعمل مجاناً بدون أي مفتاح. إن أردتَ إجابات أوسع فضع مفتاح Anthropic API الخاص بك (خدمة مدفوعة). يُحفظ المفتاح على جهازك فقط."),
             key_field,
         ]),
         btn("حفظ الإعدادات", save),
@@ -835,7 +965,7 @@ def dev_card():
     return card([
         lab("تطوير", size=13, color=MUTED, halign="center"),
         lab(DEV_NAME + " " + DEV_TAG, size=30, color=GOLD, halign="center", raw=True, font=BRAND_FONT),
-    ], color=CARD2)
+    ], color=CARD2, accent=None)
 
 
 class ChatPage(MDScreen):
@@ -852,6 +982,7 @@ class ChatPage(MDScreen):
             anchor_title="right",
             elevation=0,
             left_action_items=[["arrow-left", lambda *_: app.go("home")]],
+            right_action_items=[["menu", lambda *_: app.open_drawer()]],
         )
         Clock.schedule_once(self._style_bar, 0)
         root.add_widget(self.bar)
@@ -864,6 +995,15 @@ class ChatPage(MDScreen):
         )
         self.scroll.add_widget(self.msgs)
         root.add_widget(self.scroll)
+        quick = [
+            "كيف أثبت الحساسية؟",
+            "ما حساسية منظار 6x؟",
+            "كيف أقلل الارتداد؟",
+            "ما التحديث القادم؟",
+            "معلومات M416",
+            "كيف أقلل البنج؟",
+        ]
+        root.add_widget(hseg(quick, None, lambda q: self.send(q)))
         row = MDBoxLayout(orientation="horizontal", size_hint_y=None, height=dp(64), padding=dp(8), spacing=dp(8), md_bg_color=BAR)
         self.input = MDTextField(hint_text="Ask / اسأل", mode="rectangle", font_name=AR_FONT, multiline=False)
         self.input.bind(on_text_validate=lambda *_: self.send())
@@ -873,7 +1013,7 @@ class ChatPage(MDScreen):
         row.add_widget(send)
         root.add_widget(row)
         self.add_widget(root)
-        self.bubble("مرحباً بك، أنا مساعد PUBG Mobile. اسألني عن الحساسية وثبات الإيم والتكتيكات والأسلحة والخرائط.", bot=True)
+        self.bubble("مرحباً بك، أنا مساعد PUBG Mobile المجاني. أعمل بدون إنترنت وبدون أي اشتراك. اسألني عن الحساسية وثبات الإيم والتكتيكات والأسلحة والخرائط والتحديثات، أو اضغط على سؤال سريع بالأسفل.", bot=True)
 
     def _style_bar(self, *_):
         try:
@@ -883,7 +1023,7 @@ class ChatPage(MDScreen):
 
     def bubble(self, text, bot):
         color = CARD2 if bot else hexc("#3A2B00")
-        box = card([lab(text, size=15, color=TEXT, pad=96)], color=color, pad=12)
+        box = card([lab(text, size=15, color=TEXT, pad=96)], color=color, pad=12, accent=None)
         box.size_hint_x = 0.88
         box.pos_hint = {"x": 0} if bot else {"right": 1}
         holder = MDBoxLayout(adaptive_height=True)
@@ -896,8 +1036,8 @@ class ChatPage(MDScreen):
         Clock.schedule_once(lambda *_: setattr(self.scroll, "scroll_y", 0), 0.1)
         return holder
 
-    def send(self):
-        text = self.input.text.strip()
+    def send(self, preset=None):
+        text = (preset or self.input.text).strip()
         if not text:
             return
         self.input.text = ""
@@ -906,15 +1046,10 @@ class ChatPage(MDScreen):
         threading.Thread(target=self.ask, args=(text,), daemon=True).start()
 
     def local_answer(self, text):
-        low = text.lower()
-        best, best_score = None, 0
-        for keys, answer in LOCAL_KB:
-            score = sum(1 for k in keys if k in low)
-            if score > best_score:
-                best, best_score = answer, score
-        if best:
-            return best
-        return "لم أجد إجابة محلية لسؤالك. أضف مفتاح Anthropic API من الإعدادات ليجيب المساعد الذكي على أي سؤال، أو راجع أقسام التطبيق."
+        try:
+            return smart_answer(text, self.app_ref.data)
+        except Exception:
+            return "تعذر إيجاد إجابة الآن. حاول إعادة صياغة السؤال."
 
     def ask(self, text):
         key = self.app_ref.settings.get("api_key", "").strip()
@@ -970,6 +1105,8 @@ TILES = [
     ("settings", "الإعدادات", "cog"),
 ]
 
+TILE_COLORS = ["#F5B301", "#FF6A2B", "#3DDC84", "#4DA3FF", "#FF5C5C", "#B388FF", "#2DD4BF", "#FF8AD8", "#FFD166", "#7C9CFF", "#9AA4B8", "#8E97AB"]
+
 TITLES = {t[0]: t[1] for t in TILES}
 
 
@@ -979,32 +1116,44 @@ class HomePage(MDScreen):
         self.app_ref = app
         self.md_bg_color = BG
         scroll = MDScrollView(bar_width=0)
-        body = MDBoxLayout(orientation="vertical", adaptive_height=True, padding=[dp(14), dp(24), dp(14), dp(28)], spacing=dp(14))
-        body.add_widget(lab("PUBG MOBILE", size=34, color=GOLD, halign="center", raw=True, font=BRAND_FONT))
-        body.add_widget(lab("دليل اللاعب المحترف", size=18, color=MUTED, halign="center"))
+        body = MDBoxLayout(orientation="vertical", adaptive_height=True, padding=[dp(16), dp(28), dp(16), dp(32)], spacing=dp(16))
+        body.add_widget(card([
+            lab("PUBG MOBILE", size=36, color=GOLD, halign="center", raw=True, font=BRAND_FONT),
+            lab("دليلك الاحترافي: حساسية، تكتيكات، أسلحة، وتسريبات", size=15, color=MUTED, halign="center"),
+        ], color=CARD2, pad=22, accent=None))
         body.add_widget(dev_card())
         self.status_label = lab("", size=13, color=MUTED, halign="center")
         body.add_widget(self.status_label)
-        grid = MDGridLayout(cols=2, adaptive_height=True, spacing=dp(12))
-        for key, title, icon in TILES:
+        grid = MDGridLayout(cols=2, adaptive_height=True, spacing=dp(14))
+        for index, (key, title, icon) in enumerate(TILES):
+            accent = hexc(TILE_COLORS[index % len(TILE_COLORS)])
             tile = MDCard(
                 orientation="vertical",
-                padding=dp(12),
-                spacing=dp(8),
+                padding=dp(14),
+                spacing=dp(10),
                 size_hint_y=None,
-                height=dp(112),
+                height=dp(142),
                 md_bg_color=CARD,
-                radius=[dp(18)] * 4,
+                radius=[dp(26)] * 4,
                 elevation=0,
                 ripple_behavior=True,
             )
-            tile.add_widget(MDIcon(icon=icon, halign="center", theme_text_color="Custom", text_color=GOLD, font_size=sp(32), size_hint_y=0.5))
+            circle = MDCard(
+                size_hint=(None, None),
+                size=(dp(56), dp(56)),
+                radius=[dp(28)] * 4,
+                md_bg_color=tint(accent, 0.24),
+                elevation=0,
+                pos_hint={"center_x": 0.5},
+            )
+            circle.add_widget(MDIcon(icon=icon, halign="center", valign="middle", theme_text_color="Custom", text_color=accent, font_size=sp(28)))
+            tile.add_widget(circle)
             tile_label = MDLabel(
-                text=fmt(title, 14, pad=170),
+                text=fmt(title, 14, width=13),
                 halign="center",
+                valign="middle",
                 theme_text_color="Custom",
                 text_color=TEXT,
-                size_hint_y=0.5,
             )
             style_label(tile_label, AR_FONT_B, 14)
             tile.add_widget(tile_label)
@@ -1012,11 +1161,69 @@ class HomePage(MDScreen):
             grid.add_widget(tile)
         body.add_widget(grid)
         scroll.add_widget(body)
-        self.add_widget(scroll)
+        root = MDBoxLayout(orientation="vertical")
+        self.bar = MDTopAppBar(
+            title="PUBG VIP",
+            md_bg_color=BAR,
+            specific_text_color=GOLD,
+            anchor_title="right",
+            elevation=0,
+            right_action_items=[["menu", lambda *_: app.open_drawer()]],
+        )
+        Clock.schedule_once(self._style_bar, 0)
+        root.add_widget(self.bar)
+        root.add_widget(scroll)
+        self.add_widget(root)
+
+    def _style_bar(self, *_):
+        try:
+            self.bar.ids.label_title.font_name = BRAND_FONT
+        except Exception:
+            pass
 
     def set_status(self, text, color):
         self.status_label.text = fmt(text, 13)
         self.status_label.text_color = color
+
+
+def build_drawer(app):
+    drawer = MDNavigationDrawer(anchor="right", md_bg_color=BAR)
+    box = MDBoxLayout(orientation="vertical", padding=[dp(14), dp(24), dp(14), dp(14)], spacing=dp(10))
+    box.add_widget(lab("PUBG VIP", size=26, color=GOLD, halign="right", raw=True, font=BRAND_FONT, pad=120))
+    box.add_widget(lab("القائمة الرئيسية", size=14, color=MUTED, pad=120))
+    scroll = MDScrollView(bar_width=0)
+    inner = MDBoxLayout(orientation="vertical", adaptive_height=True, spacing=dp(8), padding=[0, dp(6), 0, dp(14)])
+    entries = [("home", "الرئيسية", "home")] + list(TILES)
+    for index, (key, title, icon) in enumerate(entries):
+        accent = hexc(TILE_COLORS[(index - 1) % len(TILE_COLORS)]) if index else GOLD
+        row = MDCard(
+            orientation="horizontal",
+            size_hint_y=None,
+            height=dp(54),
+            padding=[dp(14), 0, dp(14), 0],
+            spacing=dp(12),
+            md_bg_color=CARD,
+            radius=[dp(16)] * 4,
+            elevation=0,
+            ripple_behavior=True,
+        )
+        text_label = MDLabel(
+            text=fmt(title, 15, width=24),
+            halign="right",
+            valign="middle",
+            theme_text_color="Custom",
+            text_color=TEXT,
+        )
+        style_label(text_label, AR_FONT_B, 15)
+        row.add_widget(text_label)
+        row.add_widget(MDIcon(icon=icon, halign="center", valign="middle", theme_text_color="Custom", text_color=accent, size_hint_x=None, width=dp(32), font_size=sp(24)))
+        row.bind(on_release=lambda _r, k=key: app.go(k))
+        inner.add_widget(row)
+    scroll.add_widget(inner)
+    box.add_widget(scroll)
+    box.add_widget(lab(DEV_NAME + " " + DEV_TAG, size=18, color=GOLD, halign="center", raw=True, font=BRAND_FONT, pad=120))
+    drawer.add_widget(box)
+    return drawer
 
 
 class PubgVipApp(MDApp):
@@ -1054,9 +1261,27 @@ class PubgVipApp(MDApp):
             self.sm.add_widget(page)
         self.sm.add_widget(ChatPage(self))
         Clock.schedule_once(lambda *_: self.fetch_data(), 0.5)
-        return self.sm
+        Clock.schedule_interval(lambda *_: self.fetch_data(), 1800)
+        nav = MDNavigationLayout()
+        nav.add_widget(self.sm)
+        self.drawer = build_drawer(self)
+        nav.add_widget(self.drawer)
+        return nav
+
+    def on_resume(self):
+        self.fetch_data()
+
+    def open_drawer(self):
+        try:
+            self.drawer.set_state("open")
+        except Exception:
+            pass
 
     def go(self, name):
+        try:
+            self.drawer.set_state("close")
+        except Exception:
+            pass
         self.sm.transition.direction = "left" if name != "home" else "right"
         self.sm.current = name
 
@@ -1081,15 +1306,16 @@ class PubgVipApp(MDApp):
             pass
 
     def load_cache(self):
-        try:
-            with open(self.path("cache.json"), "r", encoding="utf-8") as f:
-                cached = json.load(f)
-            if isinstance(cached, dict):
-                merged = dict(DEFAULT_DATA)
-                merged.update(cached)
-                return merged
-        except Exception:
-            pass
+        for source in (self.path("cache.json"), os.path.join(BASE_DIR, "data.json")):
+            try:
+                with open(source, "r", encoding="utf-8") as f:
+                    cached = json.load(f)
+                if isinstance(cached, dict):
+                    merged = dict(DEFAULT_DATA)
+                    merged.update(cached)
+                    return merged
+            except Exception:
+                continue
         return dict(DEFAULT_DATA)
 
     def save_cache(self, data):
