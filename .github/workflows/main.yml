@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths-ignore:
+      - "data.json"
+      - "update_data.py"
+      - ".github/workflows/update.yml"
 
 jobs:
   build:
