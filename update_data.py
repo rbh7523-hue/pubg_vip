@@ -35,8 +35,10 @@ def clean_items(items, with_confirmed):
             continue
         if source and not source.startswith("http"):
             source = ""
-        item = {"title": title[:160], "details": details[:900], "source": source}
+        item = {"title": title[:160], "details": details[:1500], "source": source}
         if with_confirmed:
+            cat = str(it.get("category", "")).strip().lower()
+            item["category"] = cat if cat in ("packs", "royale_pass", "events") else "packs"
             item["confirmed"] = bool(it.get("confirmed", False))
         out.append(item)
     return out
@@ -53,14 +55,16 @@ def main():
         "Today is %s. Research the latest information about the global PUBG Mobile game using web search: "
         "(1) the current and next game version and its new features, modes, maps and special abilities, "
         "(2) the current and next season and Royale Pass, "
-        "(3) upcoming leaked or announced crates, lucky spins, events, ultimate sets and upgradable weapon skins. "
+        "(3) upcoming leaked or announced crates, premium crates, lucky spins, ultimate sets and upgradable weapon skins (category packs), "
+        "(4) the full leaked rewards of the next Royale Pass tier by tier when available (category royale_pass), "
+        "(5) upcoming in-game events with dates (category events). "
         "Write everything in clear Arabic, in your own words. Never invent facts and never include redeem codes or sensitivity codes. "
         "Set confirmed to true only when the information comes from the official PUBG Mobile website or official channels, otherwise false. "
         "Each item must have a source URL taken from your search results. "
         "Reply with JSON only, no other text, in exactly this shape: "
         '{"upcoming":[{"title":"...","details":"...","source":"https://..."}],'
-        '"leaks":[{"title":"...","details":"...","confirmed":false,"source":"https://..."}]} '
-        "Use at most 8 upcoming items and 10 leaks items."
+        '"leaks":[{"title":"...","category":"packs","details":"...","confirmed":false,"source":"https://..."}]} '
+        "category must be one of packs, royale_pass, events. Use at most 8 upcoming items and 14 leaks items."
     ) % today
 
     try:

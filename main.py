@@ -132,8 +132,8 @@ BG = hexc("#0A0C11")
 BAR = hexc("#10131B")
 CARD = hexc("#151A24")
 CARD2 = hexc("#1D2433")
-GOLD = hexc("#F5B301")
-ORANGE = hexc("#FF6A2B")
+GOLD = hexc("#E08A4B")
+ORANGE = hexc("#E5B25D")
 TEXT = hexc("#E9ECF3")
 MUTED = hexc("#8E97AB")
 GREEN = hexc("#3DDC84")
@@ -153,6 +153,7 @@ REDEEM_URL = "https://www.pubgmobile.com/redeem"
 AI_MODEL = "claude-haiku-4-5-20251001"
 DEV_NAME = "Murtadha"
 DEV_TAG = "(VIP)"
+DEV_INSTAGRAM = "g.eh0v"  # اسم حساب انستغرام بدون @
 
 
 def shape(line):
@@ -860,20 +861,70 @@ def build_upcoming(app):
     return widgets
 
 
+LEAK_SECTIONS = [
+    ("packs", "البكجات والصناديق وعجلات الحظ", "c_packs.png", GOLD,
+     "لا توجد تسريبات عن البكجات أو الصناديق أو عجلات الحظ حالياً."),
+    ("royale_pass", "تسريبات الرويال باس القادم", "c_pass.png", hexc("#A06EFF"),
+     "لم تتوفر تسريبات كاملة للرويال باس القادم بعد. تظهر هنا المكافآت عند توفرها."),
+    ("update", "التحديث القادم", "c_update.png", GREEN,
+     "لا توجد معلومات عن التحديث القادم حالياً."),
+    ("events", "الفعاليات القادمة", "c_events.png", ORANGE,
+     "لا توجد فعاليات قادمة محفوظة حالياً."),
+]
+
+
+def leak_category(item):
+    cat = str(item.get("category", "")).strip().lower()
+    if cat in ("packs", "royale_pass", "update", "events"):
+        return cat
+    text = (str(item.get("title", "")) + " " + str(item.get("details", ""))).lower()
+    if any(k in text for k in ("royale pass", "رويال باس", "الرويال باس", "rp ")):
+        return "royale_pass"
+    if any(k in text for k in ("فعالية", "event", "مسار", "ينتهي", "تنتهي")):
+        return "events"
+    if any(k in text for k in ("تحديث", "update", "الإصدار", "نسخة", "mode", "مود")):
+        return "update"
+    return "packs"
+
+
+def leak_card(u, with_tag=True, accent=GOLD):
+    parts = [head(str(u.get("title", "")), size=17)]
+    if with_tag and "confirmed" in u:
+        confirmed = bool(u.get("confirmed", False))
+        parts.append(lab("مؤكد" if confirmed else "غير مؤكد", size=13, color=GREEN if confirmed else ORANGE, bold=True))
+    if u.get("details"):
+        parts.append(para(str(u.get("details"))))
+    if u.get("source"):
+        parts.append(lab("المصدر: " + str(u.get("source")), size=13, color=MUTED))
+    return card(parts, accent=accent)
+
+
 def build_leaks(app):
     widgets = [update_status_card(app)]
-    items = [u for u in app.data.get("leaks", []) if isinstance(u, dict) and not str(u.get("title", "")).startswith("_")]
-    if not items:
-        widgets.append(card([head("البكجات والأسلحة التطويرية"), para("لا توجد تسريبات محفوظة حالياً. تظهر هنا البكجات وعجلة الحظ وأشكال الأسلحة بعد إضافتها للملف السحابي.", color=MUTED)]))
-    for u in items:
-        confirmed = bool(u.get("confirmed", False))
-        tag = "مؤكد" if confirmed else "غير مؤكد"
-        parts = [head(str(u.get("title", "")), size=17), lab(tag, size=13, color=GREEN if confirmed else ORANGE, bold=True)]
-        if u.get("details"):
-            parts.append(para(str(u.get("details"))))
-        if u.get("source"):
-            parts.append(lab("المصدر: " + str(u.get("source")), size=13, color=MUTED))
-        widgets.append(card(parts))
+
+    def valid(lst):
+        return [u for u in (lst or []) if isinstance(u, dict) and u.get("title") and not str(u.get("title")).startswith("_")]
+
+    leaks = valid(app.data.get("leaks"))
+    upcoming = valid(app.data.get("upcoming"))
+    groups = {key: [] for key, _, _, _, _ in LEAK_SECTIONS}
+    for u in leaks:
+        groups[leak_category(u)].append(u)
+    for u in upcoming:
+        item = dict(u)
+        item.pop("confirmed", None)
+        groups["update"].append(item)
+
+    for key, title, image, color, empty in LEAK_SECTIONS:
+        widgets.append(card([head(title, size=21, color=color)], accent=color, color=tint(color, 0.18)))
+        pic = img_card(image, None, color)
+        if pic is not None:
+            widgets.append(pic)
+        if not groups[key]:
+            widgets.append(card([para(empty, color=MUTED)], accent=color))
+        for u in groups[key]:
+            widgets.append(leak_card(u, with_tag=(key != "update"), accent=color))
+    widgets.append(card([lab("هذه المعلومات تسريبات من مصادر خارجية وقد تتغير قبل الإصدار الرسمي. المؤكد منها يُعلَّم بكلمة (مؤكد).", size=13, color=MUTED)]))
     return widgets
 
 
@@ -962,10 +1013,15 @@ def build_settings(app):
 
 
 def dev_card():
-    return card([
+    parts = [
         lab("تطوير", size=13, color=MUTED, halign="center"),
-        lab(DEV_NAME + " " + DEV_TAG, size=30, color=GOLD, halign="center", raw=True, font=BRAND_FONT),
-    ], color=CARD2, accent=None)
+        lab(DEV_NAME + " " + DEV_TAG, size=26, color=GOLD, halign="center", raw=True, font=BRAND_FONT),
+    ]
+    if DEV_INSTAGRAM:
+        url = "https://www.instagram.com/" + DEV_INSTAGRAM
+        parts.append(lab("Instagram: @" + DEV_INSTAGRAM, size=15, color=TEXT, halign="center", raw=True, font="Roboto"))
+        parts.append(btn("فتح حسابي على انستغرام", lambda: open_url(url)))
+    return card(parts, color=CARD2, accent=None)
 
 
 class ChatPage(MDScreen):
@@ -1022,7 +1078,7 @@ class ChatPage(MDScreen):
             pass
 
     def bubble(self, text, bot):
-        color = CARD2 if bot else hexc("#3A2B00")
+        color = CARD2 if bot else hexc("#3A2414")
         box = card([lab(text, size=15, color=TEXT, pad=96)], color=color, pad=12, accent=None)
         box.size_hint_x = 0.88
         box.pos_hint = {"x": 0} if bot else {"right": 1}
@@ -1105,7 +1161,7 @@ TILES = [
     ("settings", "الإعدادات", "cog"),
 ]
 
-TILE_COLORS = ["#F5B301", "#FF6A2B", "#3DDC84", "#4DA3FF", "#FF5C5C", "#B388FF", "#2DD4BF", "#FF8AD8", "#FFD166", "#7C9CFF", "#9AA4B8", "#8E97AB"]
+TILE_COLORS = ["#E08A4B", "#D9694A", "#3DDC84", "#4DA3FF", "#FF5C5C", "#B388FF", "#2DD4BF", "#FF8AD8", "#E5B25D", "#7C9CFF", "#9AA4B8", "#8E97AB"]
 
 TITLES = {t[0]: t[1] for t in TILES}
 
@@ -1121,7 +1177,6 @@ class HomePage(MDScreen):
             lab("PUBG MOBILE", size=36, color=GOLD, halign="center", raw=True, font=BRAND_FONT),
             lab("دليلك الاحترافي: حساسية، تكتيكات، أسلحة، وتسريبات", size=15, color=MUTED, halign="center"),
         ], color=CARD2, pad=22, accent=None))
-        body.add_widget(dev_card())
         self.status_label = lab("", size=13, color=MUTED, halign="center")
         body.add_widget(self.status_label)
         grid = MDGridLayout(cols=2, adaptive_height=True, spacing=dp(14))
@@ -1221,7 +1276,6 @@ def build_drawer(app):
         inner.add_widget(row)
     scroll.add_widget(inner)
     box.add_widget(scroll)
-    box.add_widget(lab(DEV_NAME + " " + DEV_TAG, size=18, color=GOLD, halign="center", raw=True, font=BRAND_FONT, pad=120))
     drawer.add_widget(box)
     return drawer
 
