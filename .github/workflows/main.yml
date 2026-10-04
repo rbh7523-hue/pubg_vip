@@ -36,6 +36,7 @@ jobs:
 
       - name: Download Arabic font
         run: |
+          sudo apt-get install -y fonts-noto-core || true
           pip install fonttools
           python get_font.py || true
           ls -la *.ttf || true
