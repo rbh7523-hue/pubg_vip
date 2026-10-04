@@ -34,6 +34,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install buildozer "cython<3"
 
+      - name: Download Arabic font
+        run: |
+          pip install fonttools
+          python get_font.py || true
+          ls -la *.ttf || true
+
       - name: Build APK
         run: |
           java -version
