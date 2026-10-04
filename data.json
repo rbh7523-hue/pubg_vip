@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "updated": "2026-10-04",
+  "sensitivity_codes": [],
+  "redeem_codes": [],
+  "upcoming": [],
+  "leaks": [],
+  "links": [],
+  "_format_help": {
+    "sensitivity_codes": "كل عنصر: {\"name\": \"اسم اللاعب أو الإعداد\", \"device\": \"نوع الجهاز\", \"code\": \"الكود الحقيقي\", \"source\": \"رابط أو اسم المصدر\", \"expires\": \"YYYY-MM-DD (اختياري)\"}",
+    "redeem_codes": "كل عنصر: {\"code\": \"الكود\", \"reward\": \"المكافأة\", \"source\": \"المصدر\", \"expires\": \"YYYY-MM-DD (اختياري)\"}",
+    "upcoming": "كل عنصر: {\"title\": \"العنوان\", \"details\": \"الشرح\", \"source\": \"المصدر\"}",
+    "leaks": "كل عنصر: {\"title\": \"العنوان\", \"details\": \"الشرح\", \"confirmed\": true, \"source\": \"المصدر\"}",
+    "links": "كل عنصر: {\"title\": \"الاسم\", \"url\": \"الرابط\"}"
+  }
+}
