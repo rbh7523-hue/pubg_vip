@@ -45,8 +45,22 @@ def fetch(urls, out):
     return False
 
 
-r = fetch(REG, "arabic.ttf")
-b = fetch(BOLD, "arabic_bold.ttf")
+import glob
+import shutil
+
+
+def from_system(names, out):
+    for name in names:
+        for path in glob.glob("/usr/share/fonts/**/" + name, recursive=True):
+            if ok(path):
+                shutil.copy(path, out)
+                print("font ok (system):", path)
+                return True
+    return False
+
+
+r = from_system(["NotoSansArabic-Regular.ttf", "NotoNaskhArabic-Regular.ttf"], "arabic.ttf") or fetch(REG, "arabic.ttf")
+b = from_system(["NotoSansArabic-Bold.ttf", "NotoNaskhArabic-Bold.ttf"], "arabic_bold.ttf") or fetch(BOLD, "arabic_bold.ttf")
 if r and not b:
     import shutil
     shutil.copy("arabic.ttf", "arabic_bold.ttf")
